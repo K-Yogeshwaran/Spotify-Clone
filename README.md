@@ -1,7 +1,7 @@
 # spotify_clone
 
-Express + MongoDB backend scaffold for the Phase 1 Spotify clone MVP now lives under `src/`.
+FastAPI + SQLite backend scaffold for the Phase 1 Spotify clone MVP now lives under `backend/`.
 
-- Entry point: `src/server.js`
-- Environment template: `.env.example`
-- Backend notes: `docs/backend.md`
+- Entry point: `backend/app/main.py`
+- Environment template: `backend/.env.example`
+- Backend notes: `backend/README.md`
