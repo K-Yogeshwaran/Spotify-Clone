@@ -1,1 +1,4 @@
 *.pyc
+env/*
+backend/spotify_clone.db
+backend/.env
