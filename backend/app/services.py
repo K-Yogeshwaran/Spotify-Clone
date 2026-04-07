@@ -34,7 +34,9 @@ def ensure_playback_state(db: Session, user: User) -> PlaybackState:
 
 
 def track_query() -> Select[tuple[Track]]:
-    return select(Track).options(joinedload(Track.artist), joinedload(Track.album).joinedload(Album.artist))
+    return select(Track).options(
+        joinedload(Track.artist), joinedload(Track.album).joinedload(Album.artist)
+    )
 
 
 def get_track_or_404(db: Session, track_id: int) -> Track:
@@ -49,8 +51,13 @@ def get_playlist_or_404(db: Session, playlist_id: int) -> Playlist:
         select(Playlist)
         .options(
             joinedload(Playlist.owner),
-            joinedload(Playlist.tracks).joinedload(PlaylistTrack.track).joinedload(Track.artist),
-            joinedload(Playlist.tracks).joinedload(PlaylistTrack.track).joinedload(Track.album).joinedload(Album.artist),
+            joinedload(Playlist.tracks)
+            .joinedload(PlaylistTrack.track)
+            .joinedload(Track.artist),
+            joinedload(Playlist.tracks)
+            .joinedload(PlaylistTrack.track)
+            .joinedload(Track.album)
+            .joinedload(Album.artist),
         )
         .where(Playlist.id == playlist_id)
     )
@@ -80,7 +87,9 @@ def add_recently_played(db: Session, user_id: int, track_id: int) -> None:
     db.commit()
 
 
-def ensure_queue(state: PlaybackState, fallback_track_id: int | None = None) -> list[int]:
+def ensure_queue(
+    state: PlaybackState, fallback_track_id: int | None = None
+) -> list[int]:
     queue = json.loads(state.queue_track_ids or "[]")
     if not queue and fallback_track_id is not None:
         queue = [fallback_track_id]
@@ -103,7 +112,9 @@ def advance_queue(db: Session, state: PlaybackState, step: int) -> PlaybackState
         return state
 
     if state.shuffle_enabled and len(queue) > 1:
-        candidates = [track_id for track_id in queue if track_id != state.current_track_id]
+        candidates = [
+            track_id for track_id in queue if track_id != state.current_track_id
+        ]
         # Use candidates if available, otherwise use queue (single track case)
         if candidates:
             next_track_id = random.choice(candidates)
@@ -111,7 +122,11 @@ def advance_queue(db: Session, state: PlaybackState, step: int) -> PlaybackState
             # Queue has only one track, which is the current track
             next_track_id = queue[0]
     else:
-        current_index = queue.index(state.current_track_id) if state.current_track_id in queue else 0
+        current_index = (
+            queue.index(state.current_track_id)
+            if state.current_track_id in queue
+            else 0
+        )
         target_index = current_index + step
         if target_index >= len(queue):
             if state.repeat_mode == "all":
@@ -137,10 +152,26 @@ def advance_queue(db: Session, state: PlaybackState, step: int) -> PlaybackState
 
 
 def user_profile(db: Session, user: User) -> UserProfile:
-    follower_count = db.scalar(select(func.count()).select_from(Follow).where(Follow.following_id == user.id)) or 0
-    following_count = db.scalar(select(func.count()).select_from(Follow).where(Follow.follower_id == user.id)) or 0
+    follower_count = (
+        db.scalar(
+            select(func.count())
+            .select_from(Follow)
+            .where(Follow.following_id == user.id)
+        )
+        or 0
+    )
+    following_count = (
+        db.scalar(
+            select(func.count())
+            .select_from(Follow)
+            .where(Follow.follower_id == user.id)
+        )
+        or 0
+    )
     base = PublicUser.model_validate(user).model_dump()
-    return UserProfile(**base, follower_count=follower_count, following_count=following_count)
+    return UserProfile(
+        **base, follower_count=follower_count, following_count=following_count
+    )
 
 
 def search_catalog(
@@ -164,7 +195,11 @@ def search_catalog(
         )
     )
     artist_stmt = select(Artist).where(Artist.name.ilike(normalized))
-    album_stmt = select(Album).options(joinedload(Album.artist)).where(Album.title.ilike(normalized))
+    album_stmt = (
+        select(Album)
+        .options(joinedload(Album.artist))
+        .where(Album.title.ilike(normalized))
+    )
 
     if artist:
         track_stmt = track_stmt.where(Artist.name.ilike(f"%{artist}%"))
@@ -190,9 +225,15 @@ def search_catalog(
 
 def suggestion_terms(db: Session, query: str) -> list[str]:
     normalized = f"{query.strip()}%"
-    tracks = db.scalars(select(Track.title).where(Track.title.ilike(normalized)).limit(5)).all()
-    artists = db.scalars(select(Artist.name).where(Artist.name.ilike(normalized)).limit(5)).all()
-    albums = db.scalars(select(Album.title).where(Album.title.ilike(normalized)).limit(5)).all()
+    tracks = db.scalars(
+        select(Track.title).where(Track.title.ilike(normalized)).limit(5)
+    ).all()
+    artists = db.scalars(
+        select(Artist.name).where(Artist.name.ilike(normalized)).limit(5)
+    ).all()
+    albums = db.scalars(
+        select(Album.title).where(Album.title.ilike(normalized)).limit(5)
+    ).all()
     seen: list[str] = []
     for term in [*tracks, *artists, *albums]:
         if term not in seen:
@@ -206,8 +247,12 @@ def stream_track_response(track: Track):
     if track.audio_path:
         file_path = Path(track.audio_path)
         if not file_path.is_file():
-            raise HTTPException(status_code=404, detail="Audio file not found on server")
-        return FileResponse(path=file_path, media_type="audio/mpeg", filename=file_path.name)
+            raise HTTPException(
+                status_code=404, detail="Audio file not found on server"
+            )
+        return FileResponse(
+            path=file_path, media_type="audio/mpeg", filename=file_path.name
+        )
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Track does not have a configured audio source",

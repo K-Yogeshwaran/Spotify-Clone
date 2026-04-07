@@ -4,7 +4,16 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Album, Artist, LikedTrack, RecentlyPlayed, SavedAlbum, SavedArtist, Track, User
+from app.models import (
+    Album,
+    Artist,
+    LikedTrack,
+    RecentlyPlayed,
+    SavedAlbum,
+    SavedArtist,
+    Track,
+    User,
+)
 from app.schemas import AlbumOut, ArtistOut, LibrarySnapshot, TrackOut
 from app.services import track_query
 
@@ -13,7 +22,9 @@ router = APIRouter(prefix="/library", tags=["library"])
 
 
 @router.get("", response_model=LibrarySnapshot)
-def snapshot(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def snapshot(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     liked_tracks = list(
         db.scalars(
             track_query()
@@ -54,12 +65,18 @@ def snapshot(current_user: User = Depends(get_current_user), db: Session = Depen
 
 
 @router.post("/tracks/{track_id}/like", status_code=status.HTTP_201_CREATED)
-def like_track(track_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def like_track(
+    track_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     track = db.get(Track, track_id)
     if track is None:
         raise HTTPException(status_code=404, detail="Track not found")
     existing = db.scalar(
-        select(LikedTrack).where(LikedTrack.user_id == current_user.id, LikedTrack.track_id == track_id)
+        select(LikedTrack).where(
+            LikedTrack.user_id == current_user.id, LikedTrack.track_id == track_id
+        )
     )
     if existing is None:
         db.add(LikedTrack(user_id=current_user.id, track_id=track_id))
@@ -68,19 +85,33 @@ def like_track(track_id: int, current_user: User = Depends(get_current_user), db
 
 
 @router.delete("/tracks/{track_id}/like")
-def unlike_track(track_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    db.execute(delete(LikedTrack).where(LikedTrack.user_id == current_user.id, LikedTrack.track_id == track_id))
+def unlike_track(
+    track_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db.execute(
+        delete(LikedTrack).where(
+            LikedTrack.user_id == current_user.id, LikedTrack.track_id == track_id
+        )
+    )
     db.commit()
     return {"liked": False, "track_id": track_id}
 
 
 @router.post("/albums/{album_id}/save", status_code=status.HTTP_201_CREATED)
-def save_album(album_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def save_album(
+    album_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     album = db.get(Album, album_id)
     if album is None:
         raise HTTPException(status_code=404, detail="Album not found")
     existing = db.scalar(
-        select(SavedAlbum).where(SavedAlbum.user_id == current_user.id, SavedAlbum.album_id == album_id)
+        select(SavedAlbum).where(
+            SavedAlbum.user_id == current_user.id, SavedAlbum.album_id == album_id
+        )
     )
     if existing is None:
         db.add(SavedAlbum(user_id=current_user.id, album_id=album_id))
@@ -89,19 +120,33 @@ def save_album(album_id: int, current_user: User = Depends(get_current_user), db
 
 
 @router.delete("/albums/{album_id}/save")
-def unsave_album(album_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    db.execute(delete(SavedAlbum).where(SavedAlbum.user_id == current_user.id, SavedAlbum.album_id == album_id))
+def unsave_album(
+    album_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db.execute(
+        delete(SavedAlbum).where(
+            SavedAlbum.user_id == current_user.id, SavedAlbum.album_id == album_id
+        )
+    )
     db.commit()
     return {"saved": False, "album_id": album_id}
 
 
 @router.post("/artists/{artist_id}/save", status_code=status.HTTP_201_CREATED)
-def save_artist(artist_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def save_artist(
+    artist_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     artist = db.get(Artist, artist_id)
     if artist is None:
         raise HTTPException(status_code=404, detail="Artist not found")
     existing = db.scalar(
-        select(SavedArtist).where(SavedArtist.user_id == current_user.id, SavedArtist.artist_id == artist_id)
+        select(SavedArtist).where(
+            SavedArtist.user_id == current_user.id, SavedArtist.artist_id == artist_id
+        )
     )
     if existing is None:
         db.add(SavedArtist(user_id=current_user.id, artist_id=artist_id))
@@ -110,7 +155,15 @@ def save_artist(artist_id: int, current_user: User = Depends(get_current_user), 
 
 
 @router.delete("/artists/{artist_id}/save")
-def unsave_artist(artist_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    db.execute(delete(SavedArtist).where(SavedArtist.user_id == current_user.id, SavedArtist.artist_id == artist_id))
+def unsave_artist(
+    artist_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db.execute(
+        delete(SavedArtist).where(
+            SavedArtist.user_id == current_user.id, SavedArtist.artist_id == artist_id
+        )
+    )
     db.commit()
     return {"saved": False, "artist_id": artist_id}

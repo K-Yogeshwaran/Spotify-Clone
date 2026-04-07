@@ -21,9 +21,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(
-        password.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(subject: str) -> str:
@@ -33,14 +31,18 @@ def create_access_token(subject: str) -> str:
     return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.jwt_algorithm]
+        )
         user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception

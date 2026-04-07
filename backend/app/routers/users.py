@@ -33,7 +33,9 @@ def follow_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     follow = db.scalar(
-        select(Follow).where(and_(Follow.follower_id == current_user.id, Follow.following_id == user_id))
+        select(Follow).where(
+            and_(Follow.follower_id == current_user.id, Follow.following_id == user_id)
+        )
     )
     if follow is None:
         db.add(Follow(follower_id=current_user.id, following_id=user_id))
@@ -41,14 +43,18 @@ def follow_user(
     return FollowResponse(following_user_id=user_id, is_following=True)
 
 
-@router.delete("/{user_id}/follow", response_model=FollowResponse, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/{user_id}/follow", response_model=FollowResponse, status_code=status.HTTP_200_OK
+)
 def unfollow_user(
     user_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     follow = db.scalar(
-        select(Follow).where(and_(Follow.follower_id == current_user.id, Follow.following_id == user_id))
+        select(Follow).where(
+            and_(Follow.follower_id == current_user.id, Follow.following_id == user_id)
+        )
     )
     if follow is not None:
         db.delete(follow)

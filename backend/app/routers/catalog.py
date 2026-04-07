@@ -4,8 +4,19 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models import Album, Artist, Track
-from app.schemas import AlbumOut, ArtistOut, SearchResponse, SuggestionResponse, TrackOut
-from app.services import search_catalog, stream_track_response, suggestion_terms, track_query
+from app.schemas import (
+    AlbumOut,
+    ArtistOut,
+    SearchResponse,
+    SuggestionResponse,
+    TrackOut,
+)
+from app.services import (
+    search_catalog,
+    stream_track_response,
+    suggestion_terms,
+    track_query,
+)
 
 
 router = APIRouter(tags=["catalog"])
@@ -39,7 +50,11 @@ def list_artists(db: Session = Depends(get_db)):
 
 @router.get("/albums", response_model=list[AlbumOut])
 def list_albums(db: Session = Depends(get_db)):
-    return list(db.scalars(select(Album).options(joinedload(Album.artist)).order_by(Album.title)).unique())
+    return list(
+        db.scalars(
+            select(Album).options(joinedload(Album.artist)).order_by(Album.title)
+        ).unique()
+    )
 
 
 @router.get("/search", response_model=SearchResponse)
@@ -50,7 +65,9 @@ def search(
     genre: str | None = None,
     db: Session = Depends(get_db),
 ):
-    tracks, artists, albums = search_catalog(db, q, artist=artist, album=album, genre=genre)
+    tracks, artists, albums = search_catalog(
+        db, q, artist=artist, album=album, genre=genre
+    )
     return SearchResponse(
         tracks=[TrackOut.model_validate(track) for track in tracks],
         artists=[ArtistOut.model_validate(item) for item in artists],

@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -27,7 +36,9 @@ class User(Base, TimestampMixin):
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    playlists: Mapped[list["Playlist"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    playlists: Mapped[list["Playlist"]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan"
+    )
     playback_state: Mapped["PlaybackState"] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
@@ -37,11 +48,15 @@ class User(Base, TimestampMixin):
 
 class Follow(Base):
     __tablename__ = "follows"
-    __table_args__ = (UniqueConstraint("follower_id", "following_id", name="uq_follow_pair"),)
+    __table_args__ = (
+        UniqueConstraint("follower_id", "following_id", name="uq_follow_pair"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     follower_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    following_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    following_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE")
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -54,7 +69,9 @@ class Artist(Base, TimestampMixin):
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     genre: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
 
-    albums: Mapped[list["Album"]] = relationship(back_populates="artist", cascade="all, delete-orphan")
+    albums: Mapped[list["Album"]] = relationship(
+        back_populates="artist", cascade="all, delete-orphan"
+    )
     tracks: Mapped[list["Track"]] = relationship(back_populates="artist")
 
 
@@ -69,7 +86,9 @@ class Album(Base, TimestampMixin):
     release_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     artist: Mapped["Artist"] = relationship(back_populates="albums")
-    tracks: Mapped[list["Track"]] = relationship(back_populates="album", cascade="all, delete-orphan")
+    tracks: Mapped[list["Track"]] = relationship(
+        back_populates="album", cascade="all, delete-orphan"
+    )
 
 
 class Track(Base, TimestampMixin):
@@ -90,7 +109,9 @@ class Track(Base, TimestampMixin):
 
 class LikedTrack(Base):
     __tablename__ = "liked_tracks"
-    __table_args__ = (UniqueConstraint("user_id", "track_id", name="uq_user_track_like"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "track_id", name="uq_user_track_like"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -100,7 +121,9 @@ class LikedTrack(Base):
 
 class SavedAlbum(Base):
     __tablename__ = "saved_albums"
-    __table_args__ = (UniqueConstraint("user_id", "album_id", name="uq_user_album_save"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "album_id", name="uq_user_album_save"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -110,7 +133,9 @@ class SavedAlbum(Base):
 
 class SavedArtist(Base):
     __tablename__ = "saved_artists"
-    __table_args__ = (UniqueConstraint("user_id", "artist_id", name="uq_user_artist_save"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "artist_id", name="uq_user_artist_save"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -122,9 +147,13 @@ class RecentlyPlayed(Base):
     __tablename__ = "recently_played"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     track_id: Mapped[int] = mapped_column(ForeignKey("tracks.id", ondelete="CASCADE"))
-    played_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    played_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, index=True
+    )
 
 
 class Playlist(Base, TimestampMixin):
@@ -147,10 +176,14 @@ class Playlist(Base, TimestampMixin):
 
 class PlaylistTrack(Base):
     __tablename__ = "playlist_tracks"
-    __table_args__ = (UniqueConstraint("playlist_id", "position", name="uq_playlist_position"),)
+    __table_args__ = (
+        UniqueConstraint("playlist_id", "position", name="uq_playlist_position"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    playlist_id: Mapped[int] = mapped_column(ForeignKey("playlists.id", ondelete="CASCADE"))
+    playlist_id: Mapped[int] = mapped_column(
+        ForeignKey("playlists.id", ondelete="CASCADE")
+    )
     track_id: Mapped[int] = mapped_column(ForeignKey("tracks.id", ondelete="CASCADE"))
     position: Mapped[int] = mapped_column(Integer)
     added_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -163,8 +196,12 @@ class PlaybackState(Base, TimestampMixin):
     __tablename__ = "playback_states"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
-    current_track_id: Mapped[int | None] = mapped_column(ForeignKey("tracks.id"), nullable=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
+    current_track_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tracks.id"), nullable=True
+    )
     is_playing: Mapped[bool] = mapped_column(Boolean, default=False)
     position_seconds: Mapped[float] = mapped_column(Float, default=0)
     volume: Mapped[float] = mapped_column(Float, default=0.8)

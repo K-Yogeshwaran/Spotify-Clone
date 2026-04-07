@@ -13,9 +13,16 @@ router = APIRouter(prefix="/playlists", tags=["playlists"])
 
 
 @router.get("", response_model=list[PlaylistOut])
-def list_playlists(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    playlists = db.scalars(select(Playlist).where(Playlist.owner_id == current_user.id)).all()
-    return [PlaylistOut.model_validate(get_playlist_or_404(db, playlist.id)) for playlist in playlists]
+def list_playlists(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    playlists = db.scalars(
+        select(Playlist).where(Playlist.owner_id == current_user.id)
+    ).all()
+    return [
+        PlaylistOut.model_validate(get_playlist_or_404(db, playlist.id))
+        for playlist in playlists
+    ]
 
 
 @router.post("", response_model=PlaylistOut, status_code=status.HTTP_201_CREATED)
@@ -32,7 +39,11 @@ def create_playlist(
 
 
 @router.get("/{playlist_id}", response_model=PlaylistOut)
-def get_playlist(playlist_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_playlist(
+    playlist_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     playlist = get_playlist_or_404(db, playlist_id)
     if not playlist.is_public and playlist.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Playlist is private")
@@ -48,7 +59,9 @@ def update_playlist(
 ):
     playlist = get_playlist_or_404(db, playlist_id)
     if playlist.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Only the owner can edit this playlist")
+        raise HTTPException(
+            status_code=403, detail="Only the owner can edit this playlist"
+        )
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(playlist, field, value)
     db.add(playlist)
@@ -64,13 +77,19 @@ def delete_playlist(
 ):
     playlist = get_playlist_or_404(db, playlist_id)
     if playlist.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Only the owner can delete this playlist")
+        raise HTTPException(
+            status_code=403, detail="Only the owner can delete this playlist"
+        )
     db.delete(playlist)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/{playlist_id}/tracks", response_model=PlaylistOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{playlist_id}/tracks",
+    response_model=PlaylistOut,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_track(
     playlist_id: int,
     payload: PlaylistTrackAdd,
@@ -79,14 +98,24 @@ def add_track(
 ):
     playlist = get_playlist_or_404(db, playlist_id)
     if playlist.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Only the owner can edit this playlist")
+        raise HTTPException(
+            status_code=403, detail="Only the owner can edit this playlist"
+        )
     track = db.get(Track, payload.track_id)
     if track is None:
         raise HTTPException(status_code=404, detail="Track not found")
     next_position = db.scalar(
-        select(func.coalesce(func.max(PlaylistTrack.position), 0) + 1).where(PlaylistTrack.playlist_id == playlist_id)
+        select(func.coalesce(func.max(PlaylistTrack.position), 0) + 1).where(
+            PlaylistTrack.playlist_id == playlist_id
+        )
     )
-    db.add(PlaylistTrack(playlist_id=playlist_id, track_id=payload.track_id, position=next_position or 1))
+    db.add(
+        PlaylistTrack(
+            playlist_id=playlist_id,
+            track_id=payload.track_id,
+            position=next_position or 1,
+        )
+    )
     db.commit()
     return PlaylistOut.model_validate(get_playlist_or_404(db, playlist_id))
 
@@ -100,7 +129,9 @@ def remove_track(
 ):
     playlist = get_playlist_or_404(db, playlist_id)
     if playlist.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Only the owner can edit this playlist")
+        raise HTTPException(
+            status_code=403, detail="Only the owner can edit this playlist"
+        )
     playlist_track = db.scalar(
         select(PlaylistTrack).where(
             PlaylistTrack.playlist_id == playlist_id,
