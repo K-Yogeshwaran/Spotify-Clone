@@ -104,7 +104,12 @@ def advance_queue(db: Session, state: PlaybackState, step: int) -> PlaybackState
 
     if state.shuffle_enabled and len(queue) > 1:
         candidates = [track_id for track_id in queue if track_id != state.current_track_id]
-        next_track_id = random.choice(candidates or queue)
+        # Use candidates if available, otherwise use queue (single track case)
+        if candidates:
+            next_track_id = random.choice(candidates)
+        else:
+            # Queue has only one track, which is the current track
+            next_track_id = queue[0]
     else:
         current_index = queue.index(state.current_track_id) if state.current_track_id in queue else 0
         target_index = current_index + step
@@ -116,7 +121,12 @@ def advance_queue(db: Session, state: PlaybackState, step: int) -> PlaybackState
                 db.commit()
                 return state
         elif target_index < 0:
-            target_index = len(queue) - 1
+            if state.repeat_mode == "all":
+                target_index = len(queue) - 1
+            else:
+                state.is_playing = False
+                db.commit()
+                return state
         next_track_id = queue[target_index]
 
     state.current_track_id = next_track_id

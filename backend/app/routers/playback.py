@@ -60,6 +60,7 @@ def pause(current_user: User = Depends(get_current_user), db: Session = Depends(
     state.is_playing = False
     db.add(state)
     db.commit()
+    db.refresh(state)
     return serialize_playback_state(db, state)
 
 
@@ -69,6 +70,7 @@ def seek(payload: SeekRequest, current_user: User = Depends(get_current_user), d
     state.position_seconds = payload.position_seconds
     db.add(state)
     db.commit()
+    db.refresh(state)
     return serialize_playback_state(db, state)
 
 
@@ -94,6 +96,7 @@ def toggle_shuffle(current_user: User = Depends(get_current_user), db: Session =
     state.shuffle_enabled = not state.shuffle_enabled
     db.add(state)
     db.commit()
+    db.refresh(state)
     return serialize_playback_state(db, state)
 
 
@@ -107,6 +110,7 @@ def set_repeat(
     state.repeat_mode = payload.repeat_mode
     db.add(state)
     db.commit()
+    db.refresh(state)
     return serialize_playback_state(db, state)
 
 
@@ -120,4 +124,5 @@ def set_volume(
     state.volume = payload.volume
     db.add(state)
     db.commit()
+    db.refresh(state)
     return serialize_playback_state(db, state)
