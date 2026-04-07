@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "frontend",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "https://your-backend-url.onrender.com"
+  }
+}
